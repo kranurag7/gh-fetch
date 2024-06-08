@@ -61,7 +61,14 @@ func getReleaseInfo(repoName, tagName string) Release {
 	}
 
 	response := Release{}
-	err = client.Get(fmt.Sprintf("repos/%s/releases/%s", repoName, tagName), &response)
+	var url string
+	if tagName == "latest" {
+		url = fmt.Sprintf("repos/%s/releases/latest", repoName)
+	} else {
+		url = fmt.Sprintf("repos/%s/releases/tags/%s", repoName, tagName)
+	}
+
+	err = client.Get(url, &response)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -69,7 +76,6 @@ func getReleaseInfo(repoName, tagName string) Release {
 }
 
 func renderTable() table.Model {
-
 	release := getReleaseInfo(repoName, tagName)
 
 	columns := []table.Column{
@@ -174,7 +180,9 @@ func createTableStyles() table.Styles {
 
 func main() {
 	flag.StringVar(&repoName, "repo", "kubernetes-sigs/cluster-api", "GitHub repository name")
+	flag.StringVar(&repoName, "R", "kubernetes-sigs/cluster-api", "GitHub repository name")
 	flag.StringVar(&tagName, "tag", "latest", "GitHub release tag")
+	flag.StringVar(&tagName, "t", "latest", "GitHub release tag")
 	flag.Parse()
 
 	m := model{renderTable(), getReleaseInfo(repoName, tagName)}
