@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/cli/go-gh/v2 v2.9.0
+	github.com/docker/go-units v0.5.0
 )
 
 require (

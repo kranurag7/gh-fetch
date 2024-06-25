@@ -15,6 +15,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/cheggaaa/pb/v3"
 	"github.com/cli/go-gh/v2/pkg/api"
+	units "github.com/docker/go-units"
 )
 
 var sizes = []string{"B", "kB", "MB", "GB", "TB", "PB", "EB"}
@@ -86,7 +87,7 @@ func renderTable() table.Model {
 	var rows []table.Row
 
 	for _, assetname := range release.Assets {
-		rows = append(rows, table.Row{assetname.Name, humanReadableSize(float64(assetname.Size), 1024.0)})
+		rows = append(rows, table.Row{assetname.Name, units.HumanSize(float64(assetname.Size))})
 	}
 
 	t := table.New(
@@ -98,22 +99,6 @@ func renderTable() table.Model {
 	t.SetStyles(createTableStyles())
 
 	return t
-}
-
-func humanReadableSize(s float64, base float64) string {
-	unitsLimit := len(sizes)
-	i := 0
-	for s >= base && i < unitsLimit {
-		s = s / base
-		i++
-	}
-
-	f := "%.0f %s"
-	if i > 1 {
-		f = "%.2f %s"
-	}
-
-	return fmt.Sprintf(f, s, sizes[i])
 }
 
 var baseStyle = lipgloss.NewStyle().
@@ -142,11 +127,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "q", "ctrl+c":
 			return m, tea.Quit
-		case "enter":
-			return m, tea.Batch(
-				tea.Printf("Download URL: curl -LO %s", m.rlz.Assets[m.table.Cursor()].BrowserDownloadURL),
-			)
-		case "d":
+		case "d", "enter":
 			selectedAsset := m.rlz.Assets[m.table.Cursor()]
 			go func() {
 				err := downloadFile(selectedAsset.BrowserDownloadURL)
@@ -186,7 +167,7 @@ func main() {
 	flag.Parse()
 
 	m := model{renderTable(), getReleaseInfo(repoName, tagName)}
-	if _, err := tea.NewProgram(m).Run(); err != nil {
+	if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 	}
 }
